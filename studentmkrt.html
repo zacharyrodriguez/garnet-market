@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Garnet Market · Student Markets</title>
+<style>
+  :root{
+    --garnet:#7a1f2b; --garnet-2:#94293a; --ink:#1d1a1b; --muted:#6f6668;
+    --line:#ebe3df; --bg:#faf7f4; --card:#fff; --soft:#f3ece8; --r:14px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased}
+  .serif{font-family:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif}
+  button,input,select,textarea{font:inherit;color:inherit}
+  [hidden]{display:none!important}
+
+  /* header */
+  header{position:sticky;top:0;z-index:20;background:rgba(250,247,244,.88);backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--line)}
+  .bar{max-width:1120px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:14px}
+  .logo{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+  .logo .name{display:flex;flex-direction:column;line-height:1.05}
+  .logo .name b{font-size:21px;font-weight:600;letter-spacing:-.01em}
+  .logo .name small{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:3px}
+  .mark{width:30px;height:30px;border-radius:9px;background:var(--garnet);color:#fff;display:grid;place-items:center;font-size:17px;font-weight:700}
+  nav{display:flex;gap:2px;margin-left:10px}
+  nav button{background:none;border:0;padding:8px 12px;border-radius:999px;cursor:pointer;color:var(--muted);font-weight:500}
+  nav button.on{color:var(--ink);background:var(--soft)}
+  .spacer{flex:1}
+  .who{color:var(--muted);font-size:13px;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .btn{border:0;border-radius:999px;padding:9px 16px;font-weight:600;cursor:pointer;background:var(--garnet);color:#fff;transition:background .15s,transform .05s;white-space:nowrap}
+  .btn:hover{background:var(--garnet-2)}
+  .btn:active{transform:translateY(1px)}
+  .btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+  .btn.ghost:hover{background:var(--soft)}
+  .btn.quiet{background:transparent;color:var(--muted);padding:8px 10px}
+  .btn.quiet:hover{color:var(--ink);background:none}
+  .btn[disabled]{opacity:.55;cursor:default}
+
+  main{max-width:1120px;margin:0 auto;padding:28px 20px 80px}
+
+  /* auth */
+  .hero{min-height:calc(100vh - 140px);display:grid;grid-template-columns:1.1fr .9fr;gap:56px;align-items:center;max-width:1000px;margin:0 auto}
+  .hero h1{font-size:clamp(36px,5vw,56px);line-height:1.05;letter-spacing:-.02em;margin:0 0 18px;font-weight:600}
+  .hero h1 em{color:var(--garnet);font-style:italic}
+  .hero p.lede{font-size:18px;color:var(--muted);max-width:30em;margin:0 0 26px}
+  .points{list-style:none;padding:0;margin:0;display:grid;gap:10px;color:var(--muted)}
+  .points li::before{content:"—";color:var(--garnet);margin-right:10px}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:30px;box-shadow:0 1px 0 rgba(0,0,0,.02),0 20px 40px -24px rgba(60,20,25,.25)}
+  .panel h2{margin:0 0 6px;font-size:24px;font-weight:600}
+  .panel .hint{color:var(--muted);font-size:14px;margin:0 0 20px}
+  label{display:block;font-size:13px;font-weight:600;margin:0 0 6px}
+  .field{margin-bottom:16px}
+  input[type=text],input[type=email],input[type=number],input[type=search],select,textarea{width:100%;border:1px solid var(--line);background:#fff;border-radius:10px;padding:11px 12px;outline:none;transition:border-color .15s,box-shadow .15s}
+  input:focus,select:focus,textarea:focus{border-color:var(--garnet);box-shadow:0 0 0 3px rgba(122,31,43,.12)}
+  textarea{resize:vertical;min-height:96px}
+  .panel .btn{width:100%;padding:12px}
+  .msg{font-size:14px;margin-top:14px;padding:12px 14px;border-radius:10px;background:var(--soft)}
+  .msg.err{background:#fbeaea;color:#8a1c1c}
+  .demo-note{font-size:12px;color:var(--muted);margin-top:16px;text-align:center}
+
+  /* toolbar */
+  .toolbar{display:flex;gap:12px;align-items:center;margin-bottom:16px}
+  .search{position:relative;flex:1}
+  .search input{padding-left:38px;border-radius:999px;background:#fff}
+  .search svg{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted)}
+  .toolbar select{width:auto;border-radius:999px;padding:10px 14px}
+  .chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;margin-bottom:22px;scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 13px;cursor:pointer;white-space:nowrap;font-size:14px;color:var(--muted)}
+  .chip.on{background:var(--ink);border-color:var(--ink);color:#fff}
+  .section-title{display:flex;align-items:baseline;justify-content:space-between;margin:0 0 16px}
+  .section-title h2{margin:0;font-size:28px;font-weight:600;letter-spacing:-.01em}
+  .count{color:var(--muted);font-size:14px}
+
+  /* grid */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:26px 20px}
+  .card{cursor:pointer}
+  .ph{aspect-ratio:4/3;background:var(--soft);border-radius:var(--r);overflow:hidden;position:relative}
+  .ph img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s ease}
+  .card:hover .ph img{transform:scale(1.03)}
+  .placeholder{width:100%;height:100%;display:grid;place-items:center;font-size:56px;color:rgba(29,26,27,.28)}
+  .badge{position:absolute;top:10px;left:10px;background:rgba(29,26,27,.85);color:#fff;font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px}
+  .meta{display:flex;justify-content:space-between;align-items:baseline;margin-top:10px}
+  .price{font-weight:700;font-size:16px}
+  .ago{color:var(--muted);font-size:12px}
+  .card h3{margin:2px 0 2px;font-size:15px;font-weight:500;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .sub{margin:0;color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .empty{text-align:center;color:var(--muted);padding:70px 20px;border:1px dashed var(--line);border-radius:20px}
+  .empty h3{color:var(--ink);font-size:22px;margin:0 0 6px;font-weight:600}
+
+  /* dialogs */
+  dialog{border:0;padding:0;border-radius:22px;width:min(880px,calc(100vw - 24px));max-height:calc(100vh - 32px);background:var(--card);color:var(--ink);box-shadow:0 30px 80px -20px rgba(0,0,0,.35)}
+  dialog::backdrop{background:rgba(29,20,22,.45);backdrop-filter:blur(2px)}
+  .dlg-close{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:50%;border:0;background:rgba(255,255,255,.92);cursor:pointer;font-size:20px;line-height:1;z-index:2;box-shadow:0 1px 4px rgba(0,0,0,.12)}
+  .detail{display:grid;grid-template-columns:1.15fr 1fr;min-height:420px}
+  .gallery{background:var(--soft);display:flex;flex-direction:column}
+  .gallery .main{flex:1;min-height:320px;display:grid;place-items:center;overflow:hidden}
+  .gallery .main img{width:100%;height:100%;object-fit:cover;max-height:560px}
+  .thumbs{display:flex;gap:8px;padding:10px}
+  .thumbs img{width:56px;height:56px;object-fit:cover;border-radius:8px;cursor:pointer;opacity:.6;border:2px solid transparent}
+  .thumbs img.on{opacity:1;border-color:var(--garnet)}
+  .info{padding:30px;overflow:auto;max-height:calc(100vh - 32px)}
+  .info h2{margin:0 0 6px;font-size:28px;line-height:1.15;font-weight:600;letter-spacing:-.01em}
+  .info .big{font-size:22px;font-weight:700;margin:0 0 14px}
+  .tags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px}
+  .tag{font-size:12px;background:var(--soft);padding:4px 10px;border-radius:999px;color:var(--muted)}
+  .desc{white-space:pre-wrap;margin:0 0 22px}
+  .seller{display:flex;align-items:center;gap:12px;padding:14px 0;border-top:1px solid var(--line);margin-bottom:18px}
+  .avatar{width:40px;height:40px;border-radius:50%;background:var(--garnet);color:#fff;display:grid;place-items:center;font-weight:700}
+  .seller small{display:block;color:var(--muted)}
+  .actions{display:flex;flex-wrap:wrap;gap:8px}
+  .actions .btn{flex:1}
+  .safety{font-size:12px;color:var(--muted);margin-top:16px}
+
+  .sellform{padding:30px}
+  .sellform h2{margin:0 0 4px;font-size:28px;font-weight:600}
+  .sellform .hint{color:var(--muted);margin:0 0 22px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  .drop{border:1.5px dashed var(--line);border-radius:14px;padding:18px;text-align:center;color:var(--muted);cursor:pointer;background:var(--bg)}
+  .drop:hover{border-color:var(--garnet)}
+  .previews{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .previews div{position:relative}
+  .previews img{width:72px;height:72px;object-fit:cover;border-radius:10px}
+  .previews button{position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;border:0;background:var(--ink);color:#fff;cursor:pointer;font-size:13px;line-height:1}
+  .check{display:flex;align-items:center;gap:8px;font-weight:500;font-size:14px;margin-top:8px}
+  .formfoot{display:flex;justify-content:flex-end;gap:10px;margin-top:8px}
+
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 18px;border-radius:999px;font-size:14px;opacity:0;transition:all .25s;pointer-events:none;z-index:50}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  footer{max-width:1120px;margin:0 auto;padding:0 20px 30px;color:var(--muted);font-size:12px;text-align:center}
+
+  @media (max-width:800px){
+    .hero{grid-template-columns:1fr;gap:30px;min-height:auto;padding-top:10px}
+    .detail{grid-template-columns:1fr}
+    .gallery .main{min-height:240px;max-height:340px}
+    .info{max-height:none}
+    dialog{overflow:auto}
+    .who{display:none}
+    nav{margin-left:0}
+    .row{grid-template-columns:1fr}
+  }
+  @media (max-width:520px){
+    .bar{flex-wrap:wrap;gap:8px}
+    nav{order:3;width:100%}
+    .logo{font-size:19px}
+    .grid{grid-template-columns:repeat(2,1fr);gap:20px 12px}
+    .toolbar select{display:none}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="bar">
+    <div class="logo serif" id="home"><span class="mark" data-b="mark">G</span><span class="name"><b data-b="market">Garnet Market</b><small>of <span data-b="network">Student Markets</span></small></span></div>
+    <nav id="nav" hidden>
+      <button data-view="browse" class="on">Browse</button>
+      <button data-view="mine">My listings</button>
+    </nav>
+    <div class="spacer"></div>
+    <div id="userArea" hidden style="display:flex;align-items:center;gap:8px">
+      <span class="who" id="who"></span>
+      <button class="btn quiet" id="signOut">Sign out</button>
+      <button class="btn" id="sellBtn">+ Sell</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- Sign in -->
+  <section id="auth" hidden>
+    <div class="hero">
+      <div>
+        <h1 class="serif">The campus marketplace, <em>just for <span data-b="school">Union</span>.</em></h1>
+        <p class="lede">Buy and sell furniture, textbooks, mini-fridges and everything in between — with students down the hall, not strangers across town.</p>
+        <ul class="points">
+          <li>Only verified @<span data-b="domain">union.edu</span> accounts can join</li>
+          <li>Pick up in your dorm or at Reamer</li>
+          <li>No fees, no shipping, no hassle</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h2 class="serif">Sign in</h2>
+        <p class="hint">Use your <span data-b="school">Union</span> email. We'll send you a one-time sign-in link — no password needed.</p>
+        <form id="authForm" novalidate>
+          <div class="field">
+            <label for="email"><span data-b="school">Union</span> email</label>
+            <input type="email" id="email" placeholder="yourname@union.edu" autocomplete="email" required>
+          </div>
+          <button class="btn" id="authBtn">Send sign-in link</button>
+        </form>
+        <div id="authMsg" class="msg" hidden></div>
+        <div class="demo-note" id="demoNote" hidden>Demo mode: no email is sent — any @union.edu address signs you straight in.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- App -->
+  <section id="app" hidden>
+    <div class="toolbar">
+      <div class="search">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="search" id="q" placeholder="Search mini-fridge, ECO 101, lamp…">
+      </div>
+      <select id="sort" aria-label="Sort">
+        <option value="new">Newest</option>
+        <option value="low">Price: low to high</option>
+        <option value="high">Price: high to low</option>
+      </select>
+    </div>
+    <div class="chips" id="chips"></div>
+    <div class="section-title">
+      <h2 class="serif" id="viewTitle">Fresh on campus</h2>
+      <span class="count" id="count"></span>
+    </div>
+    <div class="grid" id="grid"></div>
+    <div class="empty" id="empty" hidden></div>
+  </section>
+</main>
+
+<footer><span data-b="market">Garnet Market</span> is part of <span data-b="network">Student Markets</span>, a student-run network of campus marketplaces. Not affiliated with or endorsed by <span data-b="schoolFull">Union College</span>.</footer>
+
+<!-- Listing detail -->
+<dialog id="detailDlg"><button class="dlg-close" data-close aria-label="Close">×</button><div id="detailBody"></div></dialog>
+
+<!-- Sell form -->
+<dialog id="sellDlg">
+  <button class="dlg-close" data-close aria-label="Close">×</button>
+  <form class="sellform" id="sellForm" novalidate>
+    <h2 class="serif" id="sellTitle">List an item</h2>
+    <p class="hint">Good photos and an honest description sell things fast.</p>
+    <div class="field">
+      <label>Photos <span style="font-weight:400;color:var(--muted)">(up to 4)</span></label>
+      <div class="drop" id="drop">Click to add photos</div>
+      <input type="file" id="files" accept="image/*" multiple hidden>
+      <div class="previews" id="previews"></div>
+    </div>
+    <div class="field">
+      <label for="f-title">Title</label>
+      <input type="text" id="f-title" maxlength="80" placeholder="e.g., Mini-fridge, 3.1 cu ft" required>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label for="f-price">Price ($)</label>
+        <input type="number" id="f-price" min="0" max="10000" step="1" placeholder="25">
+        <label class="check"><input type="checkbox" id="f-free"> Free</label>
+      </div>
+      <div class="field">
+        <label for="f-cat">Category</label>
+        <select id="f-cat"></select>
+      </div>
+    </div>
+    <div class="row">
+      <div class="field">
+        <label for="f-cond">Condition</label>
+        <select id="f-cond">
+          <option>New</option><option>Like new</option><option selected>Good</option><option>Fair</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="f-loc">Pickup spot</label>
+        <input type="text" id="f-loc" maxlength="80" placeholder="e.g., Reamer Campus Center">
+      </div>
+    </div>
+    <div class="field">
+      <label for="f-desc">Description</label>
+      <textarea id="f-desc" maxlength="2000" placeholder="Size, age, any wear, when you're around for pickup…"></textarea>
+    </div>
+    <div class="field">
+      <label for="f-name">Name shown to buyers</label>
+      <input type="text" id="f-name" maxlength="60" placeholder="First name and last initial">
+    </div>
+    <div id="sellMsg" class="msg err" hidden></div>
+    <div class="formfoot">
+      <button type="button" class="btn ghost" data-close>Cancel</button>
+      <button class="btn" id="publishBtn">Publish listing</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   CONFIG — paste your Supabase project values here.
+   Leave both blank to run in demo mode (in-memory, nothing saved).
+   ============================================================ */
+const CONFIG = {
+  SUPABASE_URL: "https://cptrjmlxfiqmtobnqjgt.supabase.co",
+  SUPABASE_ANON_KEY: "sb_publishable_W1XICQopc6rTIRENVAm35g_BBY0_qvz",
+  ALLOWED_DOMAIN: "union.edu",
+  PHOTO_BUCKET: "listing-photos"
+};
+
+/* ============================================================
+   BRAND — change these to launch on another campus.
+   ============================================================ */
+const BRAND = {
+  NETWORK: "Student Markets",     // parent brand shown on every campus
+  MARKET: "Garnet Market",        // this campus's market name
+  MARK: "G",                      // letter in the logo square
+  SCHOOL: "Union",                // short school name
+  SCHOOL_FULL: "Union College",   // used in the disclaimer
+  ACCENT: "#7a1f2b",              // school color
+  ACCENT_HOVER: "#94293a"
+};
+
+const CATS = ["Furniture","Textbooks","Electronics","Dorm essentials","Clothing","Tickets","Bikes & transport","Other"];
+const CAT_STYLE = {
+  "Furniture":["#efe5da","▤"], "Textbooks":["#e5ebe3","❡"], "Electronics":["#e3e8ef","⌁"],
+  "Dorm essentials":["#f1e6e6","☕"], "Clothing":["#ece6f0","❖"], "Tickets":["#f2ecdc","✦"],
+  "Bikes & transport":["#e2ecec","⟳"], "Other":["#ece9e6","◇"]
+};
+const DEMO = !CONFIG.SUPABASE_URL || !CONFIG.SUPABASE_ANON_KEY;
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const isUnion = e => new RegExp("^[^@\\s]+@" + CONFIG.ALLOWED_DOMAIN.replace(/\./g,"\\.") + "$", "i").test(String(e).trim());
+const fmtPrice = p => Number(p) === 0 ? "Free" : "$" + Number(p).toLocaleString(undefined,{maximumFractionDigits:2});
+function ago(ts){
+  const s = (Date.now() - new Date(ts).getTime())/1000;
+  if (s < 60) return "just now";
+  const m = s/60, h = m/60, d = h/24;
+  if (m < 60) return Math.floor(m) + "m ago";
+  if (h < 24) return Math.floor(h) + "h ago";
+  if (d < 7) return Math.floor(d) + "d ago";
+  return new Date(ts).toLocaleDateString(undefined,{month:"short",day:"numeric"});
+}
+function toast(t){ const el=$("#toast"); el.textContent=t; el.classList.add("show"); clearTimeout(toast._t); toast._t=setTimeout(()=>el.classList.remove("show"),2400); }
+function placeholder(cat){ const [bg,g] = CAT_STYLE[cat] || CAT_STYLE.Other; return `<div class="placeholder serif" style="background:${bg}">${g}</div>`; }
+async function resize(file, max=1400){
+  const img = await createImageBitmap(file);
+  const s = Math.min(1, max/Math.max(img.width, img.height));
+  const c = document.createElement("canvas");
+  c.width = Math.round(img.width*s); c.height = Math.round(img.height*s);
+  c.getContext("2d").drawImage(img,0,0,c.width,c.height);
+  return new Promise(r => c.toBlob(r, "image/jpeg", 0.82));
+}
+
+/* ---------- backends ---------- */
+function demoApi(){
+  const now = Date.now(), H = 3600e3;
+  let rows = [
+    {title:"Mini-fridge, 3.1 cu ft — works great", price:45, category:"Dorm essentials", condition:"Good", location:"Richmond Hall", description:"Used for two years, cleaned and defrosted. Freezer box on top. Can help carry it.", seller_name:"Maya R.", seller_email:"rossm@union.edu", h:2},
+    {title:"Principles of Economics (Mankiw, 9th ed.)", price:30, category:"Textbooks", condition:"Like new", location:"Schaffer Library", description:"Barely highlighted. Used for ECO 101 last term.", seller_name:"Dev P.", seller_email:"pateld@union.edu", h:5},
+    {title:"IKEA desk lamp + extra bulb", price:8, category:"Dorm essentials", condition:"Good", location:"West College", description:"Adjustable arm, warm white bulb included.", seller_name:"Sam K.", seller_email:"kims@union.edu", h:9},
+    {title:"Twin XL sheet set, navy", price:0, category:"Dorm essentials", condition:"Like new", location:"Fox House", description:"Washed, free to a good home. Grab it this week.", seller_name:"Ana L.", seller_email:"lopeza@union.edu", h:20},
+    {title:"Futon — folds flat, great for doubles", price:60, category:"Furniture", condition:"Fair", location:"Davidson House", description:"Some wear on the cover, frame is solid. You'll need a friend to move it.", seller_name:"Chris T.", seller_email:"thomasc@union.edu", h:30},
+    {title:"TI-84 Plus graphing calculator", price:55, category:"Electronics", condition:"Good", location:"Reamer Campus Center", description:"Fresh batteries, case included.", seller_name:"Jordan B.", seller_email:"brownj@union.edu", h:44},
+    {title:"Hockey tickets — Saturday home game (2)", price:20, category:"Tickets", condition:"New", location:"Reamer Campus Center", description:"Can't make it. $20 for the pair.", seller_name:"Riley M.", seller_email:"murphyr@union.edu", h:60},
+    {title:"Trek hybrid bike + lock", price:140, category:"Bikes & transport", condition:"Good", location:"College Park Hall", description:"Medium frame, tuned up in September. U-lock and key included.", seller_name:"Theo W.", seller_email:"wongt@union.edu", h:80},
+    {title:"North Face fleece, women's M", price:25, category:"Clothing", condition:"Like new", location:"North Colonial", description:"Gray, worn a handful of times.", seller_name:"Priya S.", seller_email:"shahp@union.edu", h:100}
+  ].map((r,i)=>({ id:"demo"+i, seller_id:"u-"+r.seller_email, photos:[], status:"active", created_at:new Date(now - r.h*H).toISOString(), ...r }));
+  let user = null, cb = ()=>{};
+  return {
+    async session(){ return user; },
+    onAuth(f){ cb = f; },
+    async signIn(email){ user = { id:"u-"+email.toLowerCase(), email:email.toLowerCase() }; cb(user); return { instant:true }; },
+    async signOut(){ user = null; cb(null); },
+    async list(){ return rows.slice().sort((a,b)=>b.created_at.localeCompare(a.created_at)); },
+    async create(item, blobs){
+      const row = { ...item, id:"demo"+Date.now(), seller_id:user.id, seller_email:user.email, status:"active", created_at:new Date().toISOString(), photos: blobs.map(b=>URL.createObjectURL(b)) };
+      rows.push(row); return row;
+    },
+    async update(id, patch){ const r = rows.find(x=>x.id===id); Object.assign(r, patch); return r; },
+    async remove(id){ rows = rows.filter(x=>x.id!==id); }
+  };
+}
+
+function supaApi(){
+  const sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+  const bucket = () => sb.storage.from(CONFIG.PHOTO_BUCKET);
+  return {
+    async session(){ const { data } = await sb.auth.getSession(); return data.session?.user || null; },
+    onAuth(f){ sb.auth.onAuthStateChange((_e, s) => f(s?.user || null)); },
+    async signIn(email){
+      const { error } = await sb.auth.signInWithOtp({ email, options:{ emailRedirectTo: location.origin + location.pathname } });
+      if (error) throw error;
+      return { sent:true };
+    },
+    async signOut(){ await sb.auth.signOut(); },
+    async list(){
+      const { data, error } = await sb.from("listings").select("*").order("created_at",{ascending:false}).limit(500);
+      if (error) throw error; return data;
+    },
+    async create(item, blobs){
+      const { data:{ user } } = await sb.auth.getUser();
+      const photos = [];
+      for (const b of blobs){
+        const path = `${user.id}/${crypto.randomUUID()}.jpg`;
+        const { error } = await bucket().upload(path, b, { contentType:"image/jpeg" });
+        if (error) throw error;
+        photos.push(bucket().getPublicUrl(path).data.publicUrl);
+      }
+      const { data, error } = await sb.from("listings").insert({ ...item, photos }).select().single();
+      if (error) throw error; return data;
+    },
+    async update(id, patch){
+      const { data, error } = await sb.from("listings").update(patch).eq("id", id).select().single();
+      if (error) throw error; return data;
+    },
+    async remove(id){
+      const row = state.listings.find(l=>l.id===id);
+      const { error } = await sb.from("listings").delete().eq("id", id);
+      if (error) throw error;
+      const paths = (row?.photos||[]).map(u => u.split(`/${CONFIG.PHOTO_BUCKET}/`)[1]).filter(Boolean);
+      if (paths.length) await bucket().remove(paths);
+    }
+  };
+}
+
+/* ---------- state & rendering ---------- */
+const state = { user:null, listings:[], view:"browse", cat:"All", q:"", sort:"new", lastName:"" };
+let api;
+
+function filtered(){
+  const q = state.q.trim().toLowerCase();
+  let xs = state.listings.filter(l =>
+    state.view === "mine" ? l.seller_id === state.user.id : l.status === "active");
+  if (state.cat !== "All") xs = xs.filter(l => l.category === state.cat);
+  if (q) xs = xs.filter(l => [l.title,l.description,l.location,l.category].join(" ").toLowerCase().includes(q));
+  if (state.sort === "low")  xs.sort((a,b)=>a.price-b.price);
+  if (state.sort === "high") xs.sort((a,b)=>b.price-a.price);
+  return xs;
+}
+
+function render(){
+  const signed = !!state.user;
+  $("#auth").hidden = signed; $("#app").hidden = !signed;
+  $("#nav").hidden = !signed; $("#userArea").hidden = !signed;
+  if (!signed) return;
+  $("#who").textContent = state.user.email;
+  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.view === state.view));
+  $("#chips").innerHTML = ["All",...CATS].map(c => `<button class="chip ${c===state.cat?"on":""}" data-cat="${esc(c)}">${esc(c)}</button>`).join("");
+  $("#viewTitle").textContent = state.view === "mine" ? "Your listings" : (state.cat === "All" ? "Fresh on campus" : state.cat);
+
+  const xs = filtered();
+  $("#count").textContent = xs.length ? `${xs.length} item${xs.length>1?"s":""}` : "";
+  $("#grid").innerHTML = xs.map(l => `
+    <article class="card" data-id="${esc(l.id)}">
+      <div class="ph">${l.photos?.[0] ? `<img src="${esc(l.photos[0])}" alt="" loading="lazy">` : placeholder(l.category)}${l.status==="sold"?'<span class="badge">Sold</span>':""}</div>
+      <div class="meta"><span class="price">${fmtPrice(l.price)}</span><span class="ago">${ago(l.created_at)}</span></div>
+      <h3>${esc(l.title)}</h3>
+      <p class="sub">${esc(l.location || "On campus")}${l.condition ? " · " + esc(l.condition) : ""}</p>
+    </article>`).join("");
+  const empty = $("#empty");
+  empty.hidden = xs.length > 0;
+  empty.innerHTML = state.view === "mine"
+    ? `<h3 class="serif">Nothing listed yet</h3><p>Clearing out your room? Your first listing takes about a minute.</p><button class="btn" onclick="openSell()">List an item</button>`
+    : `<h3 class="serif">No matches</h3><p>Try another search or category — or be the first to list one.</p>`;
+}
+
+async function refresh(){
+  try { state.listings = await api.list(); } catch(e){ toast("Couldn't load listings: " + e.message); }
+  render();
+}
+
+/* ---------- detail ---------- */
+function openDetail(id){
+  const l = state.listings.find(x => x.id === id); if (!l) return;
+  const mine = l.seller_id === state.user.id;
+  const photos = l.photos || [];
+  const subject = encodeURIComponent(`${BRAND.MARKET}: ${l.title}`);
+  const body = encodeURIComponent(`Hi ${l.seller_name.split(" ")[0]},\n\nIs your "${l.title}" (${fmtPrice(l.price)}) still available?\n\n`);
+  $("#detailBody").innerHTML = `
+    <div class="detail">
+      <div class="gallery">
+        <div class="main" id="mainPh">${photos[0] ? `<img src="${esc(photos[0])}" alt="">` : placeholder(l.category)}</div>
+        ${photos.length > 1 ? `<div class="thumbs">${photos.map((p,i)=>`<img src="${esc(p)}" data-i="${i}" class="${i?"":"on"}" alt="">`).join("")}</div>` : ""}
+      </div>
+      <div class="info">
+        <h2 class="serif">${esc(l.title)}</h2>
+        <p class="big">${fmtPrice(l.price)}${l.status==="sold" ? ' <span class="tag">Sold</span>' : ""}</p>
+        <div class="tags">
+          <span class="tag">${esc(l.category)}</span>
+          ${l.condition ? `<span class="tag">${esc(l.condition)}</span>` : ""}
+          <span class="tag">📍 ${esc(l.location || "On campus")}</span>
+          <span class="tag">Listed ${ago(l.created_at)}</span>
+        </div>
+        ${l.description ? `<p class="desc">${esc(l.description)}</p>` : ""}
+        <div class="seller">
+          <div class="avatar">${esc((l.seller_name||"?")[0].toUpperCase())}</div>
+          <div><strong>${esc(l.seller_name)}</strong><small>${esc(l.seller_email)} · verified Union</small></div>
+        </div>
+        <div class="actions">
+          ${mine ? `
+            <button class="btn" data-act="toggle">${l.status==="sold" ? "Mark as available" : "Mark as sold"}</button>
+            <button class="btn ghost" data-act="delete">Delete</button>`
+          : `<a class="btn" style="text-align:center;text-decoration:none" href="mailto:${esc(l.seller_email)}?subject=${subject}&body=${body}">Message seller</a>`}
+        </div>
+        <p class="safety">Meet in a public campus spot like Reamer or the library, and check the item before you pay.</p>
+      </div>
+    </div>`;
+  const dlg = $("#detailDlg");
+  dlg.dataset.id = id;
+  dlg.querySelectorAll(".thumbs img").forEach(t => t.onclick = () => {
+    $("#mainPh").innerHTML = `<img src="${esc(photos[t.dataset.i])}" alt="">`;
+    dlg.querySelectorAll(".thumbs img").forEach(x => x.classList.toggle("on", x === t));
+  });
+  dlg.querySelector('[data-act="toggle"]')?.addEventListener("click", async () => {
+    try { await api.update(id, { status: l.status === "sold" ? "active" : "sold" }); await refresh(); openDetail(id); toast(l.status === "sold" ? "Marked as sold" : "Back on the market"); }
+    catch(e){ toast(e.message); }
+  });
+  dlg.querySelector('[data-act="delete"]')?.addEventListener("click", async ev => {
+    const b = ev.currentTarget;
+    if (!b.dataset.armed){ b.dataset.armed = "1"; b.textContent = "Tap again to delete"; return; }
+    try { await api.remove(id); dlg.close(); await refresh(); toast("Listing deleted"); } catch(e){ toast(e.message); }
+  });
+  if (!dlg.open) dlg.showModal();
+}
+
+/* ---------- sell ---------- */
+let pending = []; // {blob,url}
+function openSell(){
+  $("#sellForm").reset();
+  pending.forEach(p => URL.revokeObjectURL(p.url)); pending = [];
+  $("#previews").innerHTML = ""; $("#sellMsg").hidden = true;
+  $("#f-price").disabled = false;
+  $("#f-name").value = state.lastName || "";
+  $("#sellDlg").showModal();
+}
+window.openSell = openSell;
+
+function drawPreviews(){
+  $("#previews").innerHTML = pending.map((p,i)=>`<div><img src="${p.url}" alt=""><button type="button" data-rm="${i}" aria-label="Remove">×</button></div>`).join("");
+  $("#drop").textContent = pending.length >= 4 ? "Maximum 4 photos" : "Click to add photos";
+}
+
+/* ---------- wire up ---------- */
+function wire(){
+  $("#f-cat").innerHTML = CATS.map(c=>`<option>${esc(c)}</option>`).join("");
+  $("#home").onclick = () => { state.view="browse"; state.cat="All"; render(); window.scrollTo({top:0,behavior:"smooth"}); };
+  document.querySelectorAll("nav button").forEach(b => b.onclick = () => { state.view = b.dataset.view; render(); });
+  $("#chips").onclick = e => { const c = e.target.closest("[data-cat]"); if (c){ state.cat = c.dataset.cat; render(); } };
+  $("#q").oninput = e => { state.q = e.target.value; render(); };
+  $("#sort").onchange = e => { state.sort = e.target.value; render(); };
+  $("#grid").onclick = e => { const c = e.target.closest(".card"); if (c) openDetail(c.dataset.id); };
+  $("#sellBtn").onclick = openSell;
+  $("#signOut").onclick = () => api.signOut();
+  document.querySelectorAll("dialog").forEach(d => {
+    d.addEventListener("click", e => { if (e.target === d || e.target.closest("[data-close]")) d.close(); });
+  });
+
+  $("#authForm").onsubmit = async e => {
+    e.preventDefault();
+    const email = $("#email").value.trim().toLowerCase(), msg = $("#authMsg"), btn = $("#authBtn");
+    msg.hidden = false; msg.className = "msg";
+    if (!isUnion(email)){ msg.classList.add("err"); msg.textContent = `${BRAND.MARKET} is only open to @${CONFIG.ALLOWED_DOMAIN} addresses.`; return; }
+    btn.disabled = true; btn.textContent = "Sending…";
+    try {
+      const r = await api.signIn(email);
+      if (r.sent) msg.innerHTML = `Check <strong>${esc(email)}</strong> — we sent you a sign-in link. You can close this tab once you click it.`;
+      else msg.hidden = true;
+    } catch(err){ msg.classList.add("err"); msg.textContent = err.message || "Something went wrong. Try again."; }
+    btn.disabled = false; btn.textContent = "Send sign-in link";
+  };
+
+  $("#drop").onclick = () => { if (pending.length < 4) $("#files").click(); };
+  $("#files").onchange = async e => {
+    for (const f of [...e.target.files].slice(0, 4 - pending.length)){
+      if (!f.type.startsWith("image/")) continue;
+      try { const blob = await resize(f); pending.push({ blob, url: URL.createObjectURL(blob) }); } catch { toast("Couldn't read one of those images"); }
+    }
+    e.target.value = ""; drawPreviews();
+  };
+  $("#previews").onclick = e => { const b = e.target.closest("[data-rm]"); if (!b) return; const [p] = pending.splice(+b.dataset.rm, 1); URL.revokeObjectURL(p.url); drawPreviews(); };
+  $("#f-free").onchange = e => { $("#f-price").disabled = e.target.checked; if (e.target.checked) $("#f-price").value = ""; };
+
+  $("#sellForm").onsubmit = async e => {
+    e.preventDefault();
+    const msg = $("#sellMsg"), btn = $("#publishBtn");
+    const free = $("#f-free").checked;
+    const item = {
+      title: $("#f-title").value.trim(),
+      price: free ? 0 : Number($("#f-price").value),
+      category: $("#f-cat").value,
+      condition: $("#f-cond").value,
+      location: $("#f-loc").value.trim(),
+      description: $("#f-desc").value.trim(),
+      seller_name: $("#f-name").value.trim()
+    };
+    const err = item.title.length < 3 ? "Give your item a title (at least 3 characters)."
+      : (!free && (!$("#f-price").value || item.price < 0 || item.price > 10000)) ? "Enter a price, or check Free."
+      : !item.seller_name ? "Add the name buyers will see." : "";
+    if (err){ msg.hidden = false; msg.textContent = err; return; }
+    msg.hidden = true; btn.disabled = true; btn.textContent = "Publishing…";
+    try {
+      await api.create(item, pending.map(p => p.blob));
+      state.lastName = item.seller_name;
+      $("#sellDlg").close(); state.view = "browse"; state.cat = "All";
+      await refresh(); toast("Your listing is live");
+    } catch(ex){ msg.hidden = false; msg.textContent = ex.message || "Couldn't publish. Try again."; }
+    btn.disabled = false; btn.textContent = "Publish listing";
+  };
+}
+
+function loadScript(src){ return new Promise((res, rej) => { const s = document.createElement("script"); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); }); }
+
+function applyBrand(){
+  const map = { network:BRAND.NETWORK, market:BRAND.MARKET, mark:BRAND.MARK, school:BRAND.SCHOOL, schoolFull:BRAND.SCHOOL_FULL, domain:CONFIG.ALLOWED_DOMAIN };
+  document.querySelectorAll("[data-b]").forEach(el => el.textContent = map[el.dataset.b]);
+  document.title = `${BRAND.MARKET} · ${BRAND.NETWORK}`;
+  $("#email").placeholder = `yourname@${CONFIG.ALLOWED_DOMAIN}`;
+  document.documentElement.style.setProperty("--garnet", BRAND.ACCENT);
+  document.documentElement.style.setProperty("--garnet-2", BRAND.ACCENT_HOVER);
+}
+
+(async function start(){
+  applyBrand();
+  wire();
+  if (DEMO) { api = demoApi(); $("#demoNote").hidden = false; }
+  else {
+    try { await loadScript("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"); api = supaApi(); }
+    catch { document.body.insertAdjacentHTML("afterbegin", '<div class="msg err" style="margin:12px">Couldn\'t load the backend library. Check your connection.</div>'); return; }
+  }
+  api.onAuth(async u => {
+    if (u && !isUnion(u.email)) { await api.signOut(); return; } // belt and braces: server also enforces
+    const changed = (u?.id) !== (state.user?.id);
+    state.user = u;
+    if (u && changed) await refresh(); else render();
+  });
+  state.user = await api.session();
+  if (state.user && !isUnion(state.user.email)) { await api.signOut(); state.user = null; }
+  if (state.user) await refresh(); else render();
+})();
+</script>
+</body>
+</html>
