@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Garnet Market · Student Markets</title>
+<title>Garnet Market</title>
 <style>
   :root{
     --garnet:#7a1f2b; --garnet-2:#94293a; --ink:#1d1a1b; --muted:#6f6668;
@@ -298,7 +298,7 @@ const CONFIG = {
    BRAND — change these to launch on another campus.
    ============================================================ */
 const BRAND = {
-  NETWORK: "Student Markets",     // parent brand shown on every campus
+  NETWORK: "",                    // optional parent brand, e.g. "Student Markets"; leave blank to hide
   MARKET: "Garnet Market",        // this campus's market name
   MARK: "G",                      // letter in the logo square
   SCHOOL: "Union",                // short school name
@@ -602,7 +602,11 @@ function loadScript(src){ return new Promise((res, rej) => { const s = document.
 function applyBrand(){
   const map = { network:BRAND.NETWORK, market:BRAND.MARKET, mark:BRAND.MARK, school:BRAND.SCHOOL, schoolFull:BRAND.SCHOOL_FULL, domain:CONFIG.ALLOWED_DOMAIN };
   document.querySelectorAll("[data-b]").forEach(el => el.textContent = map[el.dataset.b]);
-  document.title = `${BRAND.MARKET} · ${BRAND.NETWORK}`;
+  document.title = BRAND.NETWORK ? `${BRAND.MARKET} · ${BRAND.NETWORK}` : BRAND.MARKET;
+  if (!BRAND.NETWORK){
+    document.querySelector(".logo small").hidden = true;
+    document.querySelector("footer").textContent = `${BRAND.MARKET} is a student-run project and is not affiliated with or endorsed by ${BRAND.SCHOOL_FULL}.`;
+  }
   $("#email").placeholder = `yourname@${CONFIG.ALLOWED_DOMAIN}`;
   document.documentElement.style.setProperty("--garnet", BRAND.ACCENT);
   document.documentElement.style.setProperty("--garnet-2", BRAND.ACCENT_HOVER);
