@@ -135,6 +135,31 @@
 
   .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:11px 18px;border-radius:999px;font-size:14px;opacity:0;transition:all .25s;pointer-events:none;z-index:50}
   .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .navbadge{display:inline-block;min-width:18px;padding:0 6px;margin-left:4px;border-radius:999px;background:var(--garnet);color:#fff;font-size:11px;font-weight:700;line-height:18px;text-align:center}
+  .navbadge:empty{display:none}
+  .linkbtn{background:none;border:0;padding:0;color:var(--muted);font-size:13px;cursor:pointer;text-decoration:underline;text-underline-offset:3px;margin-top:12px}
+  .linkbtn:hover{color:var(--garnet)}
+  a{color:var(--garnet)}
+  .modbar{display:flex;align-items:center;gap:10px;justify-content:space-between;margin-top:16px;padding:12px 14px;border-radius:12px;background:#f6efe3;font-size:13px}
+  .reps{display:grid;gap:14px}
+  .rep{display:grid;grid-template-columns:96px 1fr auto;gap:16px;align-items:start;background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px}
+  .rep .ph{aspect-ratio:1;border-radius:10px}
+  .rep .placeholder{font-size:30px}
+  .rep strong{font-size:16px}
+  .rep ul{margin:8px 0 0;padding-left:18px;font-size:14px}
+  .rep li{margin-bottom:4px}
+  .rep-act{display:flex;flex-direction:column;gap:6px}
+  .rules{padding:34px;max-width:680px}
+  .rules h2{margin:0 0 6px;font-size:30px;font-weight:600}
+  .rules h3{margin:22px 0 6px;font-size:16px}
+  .rules ul{margin:0;padding-left:20px}
+  .rules li{margin-bottom:5px}
+  .rules p{margin:0 0 8px}
+  .smalldlg{width:min(480px,calc(100vw - 24px))}
+  .reasons{display:grid;gap:8px;margin-bottom:14px}
+  .reasons label{display:flex;gap:10px;align-items:center;font-weight:500;font-size:14px;border:1px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer;margin:0}
+  .reasons label:has(input:checked){border-color:var(--garnet);background:#fbf4f4}
+  @media (max-width:640px){ .rep{grid-template-columns:64px 1fr} .rep-act{grid-column:1/-1;flex-direction:row;flex-wrap:wrap} }
   footer{max-width:1120px;margin:0 auto;padding:0 20px 30px;color:var(--muted);font-size:12px;text-align:center}
 
   @media (max-width:800px){
@@ -164,6 +189,7 @@
     <nav id="nav" hidden>
       <button data-view="browse" class="on">Browse</button>
       <button data-view="mine">My listings</button>
+      <button data-view="reports" id="reportsTab" hidden>Reports<span class="navbadge" id="repCount"></span></button>
     </nav>
     <div class="spacer"></div>
     <div id="userArea" hidden style="display:flex;align-items:center;gap:8px">
@@ -198,6 +224,7 @@
           <button class="btn" id="authBtn">Send sign-in link</button>
         </form>
         <div id="authMsg" class="msg" hidden></div>
+        <div class="demo-note">By signing in, you agree to the <a href="#" data-open-rules>community rules</a>.</div>
         <div class="demo-note" id="demoNote" hidden>Demo mode: no email is sent — any @union.edu address signs you straight in.</div>
       </div>
     </div>
@@ -222,11 +249,12 @@
       <span class="count" id="count"></span>
     </div>
     <div class="grid" id="grid"></div>
+    <div class="reps" id="reportsList" hidden></div>
     <div class="empty" id="empty" hidden></div>
   </section>
 </main>
 
-<footer><span data-b="market">Garnet Market</span> is part of <span data-b="network">Student Markets</span>, a student-run network of campus marketplaces. Not affiliated with or endorsed by <span data-b="schoolFull">Union College</span>.</footer>
+<footer><span id="footText"></span> · <a href="#" data-open-rules>Rules &amp; safety</a></footer>
 
 <!-- Listing detail -->
 <dialog id="detailDlg"><button class="dlg-close" data-close aria-label="Close">×</button><div id="detailBody"></div></dialog>
@@ -278,12 +306,78 @@
       <label for="f-name">Name shown to buyers</label>
       <input type="text" id="f-name" maxlength="60" placeholder="First name and last initial">
     </div>
+    <label class="check" style="margin:0 0 14px"><input type="checkbox" id="f-agree"> <span>This item follows the <a href="#" data-open-rules>community rules</a>. It isn't prohibited and isn't college property.</span></label>
     <div id="sellMsg" class="msg err" hidden></div>
     <div class="formfoot">
       <button type="button" class="btn ghost" data-close>Cancel</button>
       <button class="btn" id="publishBtn">Publish listing</button>
     </div>
   </form>
+</dialog>
+
+<!-- Report -->
+<dialog id="reportDlg" class="smalldlg">
+  <button class="dlg-close" data-close aria-label="Close">×</button>
+  <form class="sellform" id="reportForm" novalidate>
+    <h2 class="serif">Report listing</h2>
+    <p class="hint">Reports go to the moderators and are never shown to the seller.</p>
+    <div class="reasons">
+      <label><input type="radio" name="reason" value="Prohibited item"> Prohibited item or college property</label>
+      <label><input type="radio" name="reason" value="Scam or misleading"> Scam or misleading</label>
+      <label><input type="radio" name="reason" value="Offensive or inappropriate"> Offensive or inappropriate</label>
+      <label><input type="radio" name="reason" value="Spam or duplicate"> Spam or duplicate</label>
+      <label><input type="radio" name="reason" value="Other"> Something else</label>
+    </div>
+    <div class="field"><label for="r-details">Details <span style="font-weight:400;color:var(--muted)">(optional)</span></label>
+      <textarea id="r-details" maxlength="500" style="min-height:70px"></textarea></div>
+    <div id="reportMsg" class="msg err" hidden></div>
+    <div class="formfoot"><button type="button" class="btn ghost" data-close>Cancel</button><button class="btn" id="reportBtn">Send report</button></div>
+  </form>
+</dialog>
+
+<!-- Rules -->
+<dialog id="rulesDlg">
+  <button class="dlg-close" data-close aria-label="Close">×</button>
+  <div class="rules">
+    <h2 class="serif">Community rules &amp; safety</h2>
+    <p style="color:var(--muted)">Short version: be honest, be safe, and only sell what's yours to sell.</p>
+
+    <h3>Who can use <span data-b="market">Garnet Market</span></h3>
+    <p>Anyone with an active @<span data-b="domain">union.edu</span> email: students, faculty and staff. Your name and Union email are visible to other signed-in members so buyers can reach you.</p>
+
+    <h3>Not allowed</h3>
+    <ul>
+      <li>Alcohol, tobacco, vapes, cannabis, drugs or paraphernalia</li>
+      <li>Prescription or over-the-counter medications</li>
+      <li>Weapons of any kind (including replicas), fireworks or hazardous materials</li>
+      <li>Items not allowed in residence halls under <span data-b="school">Union</span> housing policy (for example candles, halogen lamps or open-coil appliances)</li>
+      <li><strong>College property</strong>, such as dorm furniture, mattresses or equipment that belongs to <span data-b="schoolFull">Union College</span></li>
+      <li>Academic work: papers, exams, answers or homework help for graded work</li>
+      <li>Stolen, counterfeit or recalled items, live animals, or anything illegal</li>
+      <li>Housing sublets, services, and anything that isn't a physical item or event ticket</li>
+    </ul>
+
+    <h3>Listing honestly</h3>
+    <ul>
+      <li>Use your own photos and describe the condition, including any wear or defects</li>
+      <li>Mark items sold once they're gone, and don't post duplicate listings</li>
+      <li>Tickets must be resold at or below face value</li>
+    </ul>
+
+    <h3>Staying safe</h3>
+    <ul>
+      <li>Meet in busy campus spots like Reamer Campus Center or Schaffer Library, during the day if you can</li>
+      <li>Look over the item before you pay. Cash or a payment app with someone you've met is safest</li>
+      <li>Be wary of anyone who wants to pay or be paid in advance, overpays, or asks to move off campus</li>
+      <li>Never share your sign-in link or code with anyone</li>
+    </ul>
+
+    <h3>How moderation works</h3>
+    <p>Use <strong>Report this listing</strong> on any post that breaks these rules. Moderators review reports and can remove listings. Repeated or serious violations can lead to losing access.</p>
+
+    <h3>The fine print</h3>
+    <p style="color:var(--muted)"><span data-b="market">Garnet Market</span> is a student-run project. It isn't affiliated with or endorsed by <span data-b="schoolFull">Union College</span>, and it isn't a party to any sale. Buyers and sellers are responsible for their own transactions and must follow the college's student handbook.</p>
+  </div>
 </dialog>
 
 <div class="toast" id="toast"></div>
@@ -361,7 +455,15 @@ function demoApi(){
     {title:"North Face fleece, women's M", price:25, category:"Clothing", condition:"Like new", location:"North Colonial", description:"Gray, worn a handful of times.", seller_name:"Priya S.", seller_email:"shahp@union.edu", h:100}
   ].map((r,i)=>({ id:"demo"+i, seller_id:"u-"+r.seller_email, photos:[], status:"active", created_at:new Date(now - r.h*H).toISOString(), ...r }));
   let user = null, cb = ()=>{};
+  let reports = [{ id:"r1", listing_id:"demo6", reason:"Prohibited item", details:"Pretty sure these are being resold above face value.", reporter_email:"student@union.edu", status:"open", created_at:new Date(now - 3*H).toISOString() }];
   return {
+    async isAdmin(){ return true; },
+    async report(listing_id, reason, details){
+      if (reports.some(r => r.listing_id === listing_id && r.reporter_email === user.email)) throw { code:"23505" };
+      reports.push({ id:"r"+Date.now(), listing_id, reason, details, reporter_email:user.email, status:"open", created_at:new Date().toISOString() });
+    },
+    async listReports(){ return reports.filter(r => r.status === "open").map(r => ({ ...r, listing: rows.find(x => x.id === r.listing_id) })).filter(r => r.listing); },
+    async resolveReports(listing_id){ reports.forEach(r => { if (r.listing_id === listing_id) r.status = "resolved"; }); },
     async session(){ return user; },
     onAuth(f){ cb = f; },
     async signIn(email){ user = { id:"u-"+email.toLowerCase(), email:email.toLowerCase() }; cb(user); return { instant:true }; },
@@ -388,6 +490,20 @@ function supaApi(){
       return { sent:true };
     },
     async signOut(){ await sb.auth.signOut(); },
+    async isAdmin(){ const { data, error } = await sb.rpc("is_admin"); return !error && data === true; },
+    async report(listing_id, reason, details){
+      const { error } = await sb.from("reports").insert({ listing_id, reason, details: details || null });
+      if (error) throw error;
+    },
+    async listReports(){
+      const { data, error } = await sb.from("reports").select("*, listings(*)").eq("status","open").order("created_at",{ascending:false});
+      if (error) throw error;
+      return data.map(r => ({ ...r, listing: r.listings })).filter(r => r.listing);
+    },
+    async resolveReports(listing_id){
+      const { error } = await sb.from("reports").update({ status:"resolved" }).eq("listing_id", listing_id).eq("status","open");
+      if (error) throw error;
+    },
     async list(){
       const { data, error } = await sb.from("listings").select("*").order("created_at",{ascending:false}).limit(500);
       if (error) throw error; return data;
@@ -419,7 +535,7 @@ function supaApi(){
 }
 
 /* ---------- state & rendering ---------- */
-const state = { user:null, listings:[], view:"browse", cat:"All", q:"", sort:"new", lastName:"" };
+const state = { user:null, admin:false, listings:[], reports:[], view:"browse", cat:"All", q:"", sort:"new", lastName:"" };
 let api;
 
 function filtered(){
@@ -439,7 +555,21 @@ function render(){
   $("#nav").hidden = !signed; $("#userArea").hidden = !signed;
   if (!signed) return;
   $("#who").textContent = state.user.email;
+  if (state.view === "reports" && !state.admin) state.view = "browse";
   document.querySelectorAll("nav button").forEach(b => b.classList.toggle("on", b.dataset.view === state.view));
+  $("#reportsTab").hidden = !state.admin;
+  const flagged = new Set(state.reports.map(r => r.listing_id)).size;
+  $("#repCount").textContent = flagged || "";
+  const rep = state.view === "reports";
+  document.querySelector(".toolbar").hidden = rep; $("#chips").hidden = rep;
+  $("#grid").hidden = rep; $("#reportsList").hidden = !rep;
+  if (rep){
+    $("#viewTitle").textContent = "Reports";
+    $("#count").textContent = flagged ? `${flagged} listing${flagged>1?"s":""} flagged` : "";
+    $("#empty").hidden = true;
+    renderReports();
+    return;
+  }
   $("#chips").innerHTML = ["All",...CATS].map(c => `<button class="chip ${c===state.cat?"on":""}" data-cat="${esc(c)}">${esc(c)}</button>`).join("");
   $("#viewTitle").textContent = state.view === "mine" ? "Your listings" : (state.cat === "All" ? "Fresh on campus" : state.cat);
 
@@ -447,7 +577,7 @@ function render(){
   $("#count").textContent = xs.length ? `${xs.length} item${xs.length>1?"s":""}` : "";
   $("#grid").innerHTML = xs.map(l => `
     <article class="card" data-id="${esc(l.id)}">
-      <div class="ph">${l.photos?.[0] ? `<img src="${esc(l.photos[0])}" alt="" loading="lazy">` : placeholder(l.category)}${l.status==="sold"?'<span class="badge">Sold</span>':""}</div>
+      <div class="ph">${l.photos?.[0] ? `<img src="${esc(l.photos[0])}" alt="" loading="lazy">` : placeholder(l.category)}${l.status==="sold"?'<span class="badge">Sold</span>':l.status==="removed"?'<span class="badge" style="background:#8a1c1c">Removed</span>':""}</div>
       <div class="meta"><span class="price">${fmtPrice(l.price)}</span><span class="ago">${ago(l.created_at)}</span></div>
       <h3>${esc(l.title)}</h3>
       <p class="sub">${esc(l.location || "On campus")}${l.condition ? " · " + esc(l.condition) : ""}</p>
@@ -461,6 +591,7 @@ function render(){
 
 async function refresh(){
   try { state.listings = await api.list(); } catch(e){ toast("Couldn't load listings: " + e.message); }
+  if (state.admin){ try { state.reports = await api.listReports(); } catch(e){ toast("Couldn't load reports: " + e.message); } }
   render();
 }
 
@@ -478,6 +609,7 @@ function openDetail(id){
         ${photos.length > 1 ? `<div class="thumbs">${photos.map((p,i)=>`<img src="${esc(p)}" data-i="${i}" class="${i?"":"on"}" alt="">`).join("")}</div>` : ""}
       </div>
       <div class="info">
+        ${l.status==="removed" ? '<div class="msg err" style="margin:0 0 14px">A moderator removed this listing for breaking the community rules. Only you and the moderators can see it.</div>' : ""}
         <h2 class="serif">${esc(l.title)}</h2>
         <p class="big">${fmtPrice(l.price)}${l.status==="sold" ? ' <span class="tag">Sold</span>' : ""}</p>
         <div class="tags">
@@ -492,21 +624,21 @@ function openDetail(id){
           <div><strong>${esc(l.seller_name)}</strong><small>${esc(l.seller_email)} · verified Union</small></div>
         </div>
         <div class="actions">
-          ${mine ? `
+          ${mine && l.status === "removed" ? `<button class="btn ghost" data-act="delete">Delete</button>` : mine ? `
             <button class="btn" data-act="toggle">${l.status==="sold" ? "Mark as available" : "Mark as sold"}</button>
             <button class="btn ghost" data-act="delete">Delete</button>`
-          : `<button class="btn" data-act="contact">Message seller</button>`}
+          : `<a class="btn" style="text-align:center;text-decoration:none" target="_blank" rel="noopener" href="https://mail.google.com/mail/?authuser=${encodeURIComponent(state.user.email)}&view=cm&fs=1&to=${encodeURIComponent(l.seller_email)}&su=${subject}&body=${body}">Message seller</a>`}
         </div>
         ${mine ? "" : `
-        <div class="contact" id="contactBox" hidden>
+        <div class="contact">
           <div class="addr"><code>${esc(l.seller_email)}</code><button class="btn ghost" data-act="copy">Copy</button></div>
-          <div class="opts">
-            <a class="btn ghost" target="_blank" rel="noopener" href="https://outlook.office.com/mail/deeplink/compose?to=${encodeURIComponent(l.seller_email)}&subject=${subject}&body=${body}">Open in Outlook</a>
-            <a class="btn ghost" target="_blank" rel="noopener" href="https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(l.seller_email)}&su=${subject}&body=${body}">Open in Gmail</a>
-          </div>
-          <p class="note">Or <a href="mailto:${esc(l.seller_email)}?subject=${subject}&body=${body}">use your computer's mail app</a>. Either Outlook or Gmail opens a message that's already filled in.</p>
+          <p class="note" style="margin:0">Message seller opens a ready-to-send email in Gmail. You can also copy the address.</p>
         </div>`}
-        <p class="safety">Meet in a public campus spot like Reamer or the library, and check the item before you pay.</p>
+        <p class="safety">Meet in a public campus spot like Reamer or the library, and check the item before you pay. <a href="#" data-open-rules>Rules &amp; safety</a></p>
+        ${mine ? "" : `<button class="linkbtn" data-act="report">⚑ Report this listing</button>`}
+        ${state.admin && !mine ? `<div class="modbar"><span><strong>Moderator tools</strong></span>${l.status === "removed"
+            ? `<button class="btn ghost" data-act="restore">Restore listing</button>`
+            : `<button class="btn ghost" data-act="remove">Remove listing</button>`}</div>` : ""}
       </div>
     </div>`;
   const dlg = $("#detailDlg");
@@ -514,9 +646,6 @@ function openDetail(id){
   dlg.querySelectorAll(".thumbs img").forEach(t => t.onclick = () => {
     $("#mainPh").innerHTML = `<img src="${esc(photos[t.dataset.i])}" alt="">`;
     dlg.querySelectorAll(".thumbs img").forEach(x => x.classList.toggle("on", x === t));
-  });
-  dlg.querySelector('[data-act="contact"]')?.addEventListener("click", () => {
-    const box = $("#contactBox"); box.hidden = !box.hidden;
   });
   dlg.querySelector('[data-act="copy"]')?.addEventListener("click", async ev => {
     const b = ev.currentTarget;
@@ -528,6 +657,9 @@ function openDetail(id){
     }
     b.textContent = "Copied"; setTimeout(() => b.textContent = "Copy", 1600);
   });
+  dlg.querySelector('[data-act="report"]')?.addEventListener("click", () => openReport(id));
+  dlg.querySelector('[data-act="remove"]')?.addEventListener("click", () => moderate(id, "removed"));
+  dlg.querySelector('[data-act="restore"]')?.addEventListener("click", () => moderate(id, "active"));
   dlg.querySelector('[data-act="toggle"]')?.addEventListener("click", async () => {
     try { await api.update(id, { status: l.status === "sold" ? "active" : "sold" }); await refresh(); openDetail(id); toast(l.status === "sold" ? "Marked as sold" : "Back on the market"); }
     catch(e){ toast(e.message); }
@@ -538,6 +670,45 @@ function openDetail(id){
     try { await api.remove(id); dlg.close(); await refresh(); toast("Listing deleted"); } catch(e){ toast(e.message); }
   });
   if (!dlg.open) dlg.showModal();
+}
+
+/* ---------- moderation ---------- */
+async function moderate(id, status){
+  try {
+    await api.update(id, { status });
+    if (status === "removed") await api.resolveReports(id);
+    $("#detailDlg").close();
+    await refresh();
+    toast(status === "removed" ? "Listing removed" : "Listing restored");
+  } catch(e){ toast(e.message || "Couldn't update that listing"); }
+}
+
+function openReport(id){
+  const dlg = $("#reportDlg");
+  $("#reportForm").reset(); $("#reportMsg").hidden = true;
+  dlg.dataset.id = id;
+  dlg.showModal();
+}
+
+function renderReports(){
+  const groups = {};
+  for (const r of state.reports) (groups[r.listing_id] ||= { listing:r.listing, items:[] }).items.push(r);
+  const gs = Object.values(groups);
+  $("#reportsList").innerHTML = gs.length ? gs.map(g => { const l = g.listing; return `
+    <div class="rep" data-id="${esc(l.id)}">
+      <div class="ph">${l.photos?.[0] ? `<img src="${esc(l.photos[0])}" alt="">` : placeholder(l.category)}</div>
+      <div>
+        <strong>${esc(l.title)}</strong> <span class="tag">${esc(l.status)}</span>
+        <div class="sub">${esc(l.seller_name)} · ${esc(l.seller_email)} · ${fmtPrice(l.price)}</div>
+        <ul>${g.items.map(r => `<li><b>${esc(r.reason)}</b>${r.details ? " · " + esc(r.details) : ""} <span class="ago">by ${esc(r.reporter_email)}, ${ago(r.created_at)}</span></li>`).join("")}</ul>
+      </div>
+      <div class="rep-act">
+        <button class="btn ghost" data-r="view">View</button>
+        ${l.status !== "removed" ? `<button class="btn" data-r="remove">Remove listing</button>` : ""}
+        <button class="btn quiet" data-r="dismiss">Dismiss</button>
+      </div>
+    </div>`; }).join("")
+    : `<div class="empty"><h3 class="serif">All clear</h3><p>No open reports right now.</p></div>`;
 }
 
 /* ---------- sell ---------- */
@@ -567,6 +738,33 @@ function wire(){
   $("#sort").onchange = e => { state.sort = e.target.value; render(); };
   $("#grid").onclick = e => { const c = e.target.closest(".card"); if (c) openDetail(c.dataset.id); };
   $("#sellBtn").onclick = openSell;
+  document.addEventListener("click", e => {
+    const a = e.target.closest("[data-open-rules]");
+    if (a){ e.preventDefault(); $("#rulesDlg").showModal(); }
+  });
+  $("#reportsList").onclick = async e => {
+    const b = e.target.closest("[data-r]"); if (!b) return;
+    const id = b.closest(".rep").dataset.id;
+    if (b.dataset.r === "view") return openDetail(id);
+    if (b.dataset.r === "remove") return moderate(id, "removed");
+    try { await api.resolveReports(id); await refresh(); toast("Report dismissed"); } catch(err){ toast(err.message); }
+  };
+  $("#reportForm").onsubmit = async e => {
+    e.preventDefault();
+    const reason = document.querySelector('#reportForm input[name="reason"]:checked')?.value;
+    const msg = $("#reportMsg"), btn = $("#reportBtn");
+    if (!reason){ msg.hidden = false; msg.textContent = "Pick a reason."; return; }
+    btn.disabled = true;
+    try {
+      await api.report($("#reportDlg").dataset.id, reason, $("#r-details").value.trim());
+      $("#reportDlg").close(); toast("Thanks. A moderator will take a look.");
+      if (state.admin) await refresh();
+    } catch(err){
+      if (err?.code === "23505"){ $("#reportDlg").close(); toast("You've already reported this listing."); }
+      else { msg.hidden = false; msg.textContent = err.message || "Couldn't send the report."; }
+    }
+    btn.disabled = false;
+  };
   $("#signOut").onclick = () => api.signOut();
   document.querySelectorAll("dialog").forEach(d => {
     d.addEventListener("click", e => { if (e.target === d || e.target.closest("[data-close]")) d.close(); });
@@ -612,7 +810,8 @@ function wire(){
     };
     const err = item.title.length < 3 ? "Give your item a title (at least 3 characters)."
       : (!free && (!$("#f-price").value || item.price < 0 || item.price > 10000)) ? "Enter a price, or check Free."
-      : !item.seller_name ? "Add the name buyers will see." : "";
+      : !item.seller_name ? "Add the name buyers will see."
+      : !$("#f-agree").checked ? "Please confirm the item follows the community rules." : "";
     if (err){ msg.hidden = false; msg.textContent = err; return; }
     msg.hidden = true; btn.disabled = true; btn.textContent = "Publishing…";
     try {
@@ -631,10 +830,10 @@ function applyBrand(){
   const map = { network:BRAND.NETWORK, market:BRAND.MARKET, mark:BRAND.MARK, school:BRAND.SCHOOL, schoolFull:BRAND.SCHOOL_FULL, domain:CONFIG.ALLOWED_DOMAIN };
   document.querySelectorAll("[data-b]").forEach(el => el.textContent = map[el.dataset.b]);
   document.title = BRAND.NETWORK ? `${BRAND.MARKET} · ${BRAND.NETWORK}` : BRAND.MARKET;
-  if (!BRAND.NETWORK){
-    document.querySelector(".logo small").hidden = true;
-    document.querySelector("footer").textContent = `${BRAND.MARKET} is a student-run project and is not affiliated with or endorsed by ${BRAND.SCHOOL_FULL}.`;
-  }
+  if (!BRAND.NETWORK) document.querySelector(".logo small").hidden = true;
+  $("#footText").textContent = BRAND.NETWORK
+    ? `${BRAND.MARKET} is part of ${BRAND.NETWORK}, a student-run network of campus marketplaces. Not affiliated with or endorsed by ${BRAND.SCHOOL_FULL}.`
+    : `${BRAND.MARKET} is a student-run project and is not affiliated with or endorsed by ${BRAND.SCHOOL_FULL}.`;
   $("#email").placeholder = `yourname@${CONFIG.ALLOWED_DOMAIN}`;
   document.documentElement.style.setProperty("--garnet", BRAND.ACCENT);
   document.documentElement.style.setProperty("--garnet-2", BRAND.ACCENT_HOVER);
@@ -652,11 +851,12 @@ function applyBrand(){
     if (u && !isUnion(u.email)) { await api.signOut(); return; } // belt and braces: server also enforces
     const changed = (u?.id) !== (state.user?.id);
     state.user = u;
-    if (u && changed) await refresh(); else render();
+    if (u && changed){ state.admin = await api.isAdmin(); await refresh(); }
+    else { if (!u){ state.admin = false; state.reports = []; state.view = "browse"; } render(); }
   });
   state.user = await api.session();
   if (state.user && !isUnion(state.user.email)) { await api.signOut(); state.user = null; }
-  if (state.user) await refresh(); else render();
+  if (state.user){ state.admin = await api.isAdmin(); await refresh(); } else render();
 })();
 </script>
 </body>
