@@ -1,0 +1,18 @@
+name: Keep Supabase awake
+
+# Supabase pauses free projects after about a week with no activity (e.g., over breaks).
+# This pings the database every 3 days so the site stays up. Runs free on GitHub.
+on:
+  schedule:
+    - cron: "17 14 */3 * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase
+        run: |
+          curl -sS -o /dev/null -w "Supabase answered: %{http_code}\n" \
+            "https://cptrjmlxfiqmtobnqjgt.supabase.co/rest/v1/listings?select=id&limit=1" \
+            -H "apikey: sb_publishable_W1XICQopc6rTIRENVAm35g_BBY0_qvz"
