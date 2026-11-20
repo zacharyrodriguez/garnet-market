@@ -406,7 +406,8 @@ const CONFIG = {
   SUPABASE_ANON_KEY: "sb_publishable_W1XICQopc6rTIRENVAm35g_BBY0_qvz",
   ALLOWED_DOMAIN: "union.edu",
   PHOTO_BUCKET: "listing-photos",
-  EMAIL_LINK_SIGNIN: false   // true = also offer "sign-in link by email" (needs working email sending in Supabase)
+  EMAIL_LINK_SIGNIN: true,   // email sign-in links (needs working email sending in Supabase)
+  GOOGLE_SIGNIN: false       // true = show "Continue with Google" (needs Google provider set up in Supabase)
 };
 
 /* ============================================================
@@ -794,6 +795,13 @@ function wire(){
   });
 
   $("#emailAlt").hidden = !CONFIG.EMAIL_LINK_SIGNIN && !DEMO;
+  if (!CONFIG.GOOGLE_SIGNIN && !DEMO){
+    // Email-only mode: hide the Google button and show the email form directly.
+    $("#googleBtn").hidden = true;
+    $("#emailAlt").open = true;
+    $("#emailAlt summary").hidden = true;
+    document.querySelector(".panel .hint").innerHTML = `Use your ${esc(BRAND.SCHOOL)} email. We'll send you a one-time sign-in link, so there's no password to remember.`;
+  }
   $("#googleBtn").onclick = async () => {
     const msg = $("#authMsg");
     try { await api.signInGoogle(); }
