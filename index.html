@@ -815,7 +815,7 @@ function wire(){
     btn.disabled = true; btn.textContent = "Sending…";
     try {
       const r = await api.signIn(email);
-      if (r.sent) msg.innerHTML = `Check <strong>${esc(email)}</strong> — we sent you a sign-in link. You can close this tab once you click it.`;
+      if (r.sent) msg.innerHTML = `We sent a sign-in link to <strong>${esc(email)}</strong>. It should arrive within a minute.<br><span style="font-size:13px;color:var(--muted)">Don't see it? Check your <strong>spam or junk folder</strong> and mark it "Not spam" so future links reach your inbox.</span>`;
       else msg.hidden = true;
     } catch(err){ msg.classList.add("err"); msg.textContent = err.message || "Something went wrong. Try again."; }
     btn.disabled = false; btn.textContent = "Send sign-in link";
